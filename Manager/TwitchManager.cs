@@ -31,84 +31,10 @@ public class TwitchManager : Singleton<TwitchManager>
     private ClientWebSocket _ircClient;
     CancellationToken token = new CancellationToken();
     private bool accessTokenAvailable;
-    
-    /* typical message */
-    //@badge-info=;
-    //badges=broadcaster/1;                 --> badges in front of user
-    //client-nonce=744548abbc774152af24ab91c614263a;
-    //color=#0000FF;
-    //display-name=thethibz;
-    //emote-only=1;                         --> has only emotes
-    //emotes=301544922:5-12,14-21;          --> emote:start_index-end_index(?),start_index-end_index(?)
-    //first-msg=0;                          --> never posted on channel before
-    //flags=;
-    //id=bd5a9b3b-9db0-4d84-8d36-58b9eff33ac8;
-    //mod=0;                                --> is moderator
-    //returning-chatter=0;
-    //room-id=22464897;
-    //subscriber=0;                         --> is subscriber
-    //tmi-sent-ts=1675160709912;
-    //turbo=0;
-    //user-id=22464897;
-    //user-type= :thethibz!thethibz@thethibz.tmi.twitch.tv
-    //PRIVMSG #thethibz :point ;
-    
-    /*private IEnumerator GetAccessToken()
-    {
-        accessTokenAvailable = true;
-        yield break;
-        //https://id.twitch.tv/oauth2/token
-        //client_id=hof5gwx0su6owfnys0yan9c87zr6t&client_secret=41vpdji4e9gif29md0ouet6fktd2&grant_type=client_credentials
 
-        var client = new HttpClient();
-
-        var requestContent = new FormUrlEncodedContent(new [] {
-            new KeyValuePair<string, string>("client_id", clientID),
-            new KeyValuePair<string, string>("client_secret", clientSecret),
-            new KeyValuePair<string, string>("grant_type", "client_credentials"),
-        });
-        var post_task = client.PostAsync(
-            "https://id.twitch.tv/oauth2/token",
-            requestContent);
-
-        while( !post_task.IsCompletedSuccessfully )
-        {
-            yield return null;
-        }
-        
-        HttpContent responseContent = post_task.Result.Content;
-
-        var read_task = responseContent.ReadAsStreamAsync();
-        
-        while( !read_task.IsCompletedSuccessfully )
-        {
-            yield return null;
-        }
-        
-        using (var reader = new StreamReader(read_task.Result ))
-        {
-            // {"access_token":"2j7bpqn4r4eo67dfafvn7srkmuyzl4","expires_in":4839966,"token_type":"bearer"}
-            var response = JSON.Parse( reader.ReadToEnd() );
-            accessToken = response[ "access_token" ];
-            accessTokenAvailable = true;
-        }
-    }*/
-/*
-    private void OpenBrowser()
-    {
-        var scope = "chat%3Aread";
-        
-        var uri = $"https://id.twitch.tv/oauth2/authorize?response_type=token&client_id={clientID}&redirect_uri=http://localhost:3000&scope={scope}";
-       
-        //&state=c3ab8aa609ea11e793ae92361f002671
-        
-        Application.OpenURL( uri );
-    }
-*/
     private void DispatchMessage( string message )
     {
         Debug.LogWarning("<color=#0000AA>" + message + "</color>");
-        // TODO send message to translator
         
         if( message.StartsWith( "PING", StringComparison.InvariantCulture ) )
         {
@@ -163,14 +89,6 @@ public class TwitchManager : Singleton<TwitchManager>
             {
                 StartCoroutine( SendChat( "Salut/Hello" ) );
             }
-            else if( _latestMessageInfoMap["mod"] == "1" )
-            {
-                //StartCoroutine( SendChat( "SirUwU" ) );
-            }
-            else
-            {
-                //StartCoroutine( SendChat( (Random.Range(0.0f, 1.0f) > 0.5f) ? $"@{_latestMessageInfoMap["display-name"]} TIRE" : $"@{_latestMessageInfoMap["display-name"]} SAUTE" ) );
-            }
 
             try
             {
@@ -180,8 +98,6 @@ public class TwitchManager : Singleton<TwitchManager>
             {
                 Debug.LogError( e );
             }
-
-            //Debug.Log( string.IsNullOrEmpty(final_message) ? ">empty<" : final_message );
         }
         else
         {
@@ -191,9 +107,6 @@ public class TwitchManager : Singleton<TwitchManager>
 
     private void CacheProfilePicture()
     {
-        //curl -X GET 'https://api.twitch.tv/helix/users?id=141981764' -H 'Authorization: Bearer pnohq3uy1sa2nkiek95vquaewupxx6' -H 'Client-Id: ua8jlhti4nkasd890m44bguq8v9def'
-        //GET https://api.twitch.tv/helix/users
-
         var user_request = UnityWebRequest.Get( $"https://api.twitch.tv/helix/users?login={PlayerPrefs.GetString( "account_name" )}" );
         user_request.SetRequestHeader( "Authorization", $"Bearer {accessToken}" );
         user_request.SetRequestHeader( "Client-Id", $"{clientID}" );
@@ -220,20 +133,6 @@ public class TwitchManager : Singleton<TwitchManager>
             {
                 var url = result[ "data" ].Childs.First()[ "profile_image_url" ].ToString();
                 var image_request = UnityWebRequest.Get( url.Substring( 1, url.Length - 2 ) );
-               
-                //[
-                //  data,
-                //[
-                //{
-                //"id":22464897,
-                //"login":thethibz,
-                //"display_name":thethibz,
-                //"profile_image_url":https://static-cdn.jtvnw.net/user-default-pictures-uv/13e5fa74-defa-11e9-809c-784f43822e80-profile_image-300x300.png,
-                //"view_count":73,
-                //"created_at":2011-05-17T18:40:14Z}
-                //]
-                //]
-                
                 
                 image_request.SendWebRequest().completed += async_operation =>
                 {
@@ -256,17 +155,7 @@ public class TwitchManager : Singleton<TwitchManager>
         {
             yield break;
         }
-        
-        //OpenBrowser();
-        //yield return null;
-        /*
-        var access_coroutine = StartCoroutine( GetAccessToken() );
-        while( !accessTokenAvailable )
-        {
-            yield return null;
-        }
-        */
-        
+
         CacheProfilePicture();
         
         _ircClient = new ClientWebSocket();
