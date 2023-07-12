@@ -73,7 +73,7 @@ public class MenuFlowManager : Singleton<MenuFlowManager>
     }
     public void OnButtonRecipeSelection()
     {
-        StartCoroutine( TwitchManager.Instance.Connect() );
+        StartCoroutine( TwitchAPIManager.Instance.Connect() );
         SwitchMenuState(MenuState.RECIPE_SELECTION);
     }
     public void OnButtonCredits()

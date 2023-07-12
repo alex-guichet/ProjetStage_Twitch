@@ -14,7 +14,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using Random = UnityEngine.Random;
 
-public class TwitchManager : Singleton<TwitchManager>
+public class TwitchAPIManager : Singleton<TwitchManager>
 {
     internal Texture2D profilePicture;
     
